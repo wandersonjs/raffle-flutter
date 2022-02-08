@@ -1,17 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:raffle_local/src/models/raffle.dart';
+import 'package:raffle_local/src/models/raffle_details.dart';
+import 'package:raffle_local/src/models/raffle_num.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 
 class RaffleController extends ControllerMVC {
-  String premiumDescription = "Fiat uno mille 2008"; //
-  double premiumValue = 3500.0;
+  RaffleDetails _raffleDetails = RaffleDetails();
+
+  String premiumDescription = "Biquini de crochê"; //
+  double premiumValue = 50.0;
   int min = 1;
-  int max = 3000;
-  double quotaValue = 15.0;
+  int max = 50;
+  double quotaValue = 5.0;
 
   bool selling = true;
   bool finished = false;
@@ -19,9 +22,9 @@ class RaffleController extends ControllerMVC {
 
   static const raffleTime = Duration(seconds: 10);
 
-  List<Raffle> raffleNums = [];
-  List<Raffle> raffleBuyingNums = [];
-  List<Raffle> raffleSoldNums = [];
+  List<RaffleNum> raffleNums = [];
+  List<RaffleNum> raffleBuyingNums = [];
+  List<RaffleNum> raffleSoldNums = [];
   Map<String, dynamic> winner = {};
 
   int sorteado = 0;
@@ -30,16 +33,6 @@ class RaffleController extends ControllerMVC {
   double total = 0.0;
 
   double liquidEarning = 0.0;
-  double adminEarning = 0.0;
-  double donatorEarning = 0.0;
-  double sponsorEarning = 0.0;
-  double bankEarning = 0.0;
-
-  double adminPercentage = 0.20;
-  double donatorPercentage = 0.50;
-  double sponsorPercentage = 0.30;
-  double bankPercentage = 0.03;
-  double bankFixValue = 0.40;
 
   List<String> buyer = [
     'Wanderson',
@@ -62,11 +55,10 @@ class RaffleController extends ControllerMVC {
     finished = false;
     setState(() {});
     for (var i = min; i <= max; i++) {
-      Raffle value = Raffle(
+      RaffleNum value = RaffleNum(
         index: i - 1,
         number: i,
         buyer: "",
-        sponsor: "",
       );
       raffleNums.add(value);
       sellingNums++;
@@ -77,10 +69,31 @@ class RaffleController extends ControllerMVC {
     });
   }
 
+  //Saves the raffle details
+  Future<void> saveRaffleDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('raffleDetails', jsonEncode(_raffleDetails));
+  }
+
+  Future<void> getRaffleDetails() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var getDetails = prefs.getString('raffleDetails');
+    RaffleDetails _details = jsonDecode(getDetails!);
+    setState(() {
+      _raffleDetails = _details;
+    });
+  }
+
   //Saves all the raffle numbers into the shared preferences
   Future<void> saveRaffleNums() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('raffleNums', jsonEncode(raffleNums));
+  }
+
+  //Saves all the sold numbers into the shared preferences
+  Future<void> saveraffleSoldNums() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('raffleSoldNums', jsonEncode(raffleSoldNums));
   }
 
   //Clears all the raffle info from shared preferences
@@ -90,19 +103,13 @@ class RaffleController extends ControllerMVC {
     await prefs.remove('raffleSoldNums');
   }
 
-  //Saves all the sold numbers into the shared preferences
-  Future<void> saveraffleSoldNums() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('raffleSoldNums', jsonEncode(raffleSoldNums));
-  }
-
   //Get the saved numbers from sharedpreferences
   Future<void> getRaffleNums() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     if (prefs.containsKey('raffleNums')) {
       var getRaffleNums = prefs.getString('raffleNums');
-      List<Raffle> list = (jsonDecode(getRaffleNums!) as List)
-          .map((data) => Raffle.fromJSON(data))
+      List<RaffleNum> list = (jsonDecode(getRaffleNums!) as List)
+          .map((data) => RaffleNum.fromJSON(data))
           .toList();
       setState(() {
         raffleNums = list;
@@ -110,8 +117,8 @@ class RaffleController extends ControllerMVC {
     }
     if (prefs.containsKey('raffleSoldNums')) {
       var getraffleSoldNums = prefs.getString('raffleSoldNums');
-      List<Raffle> list = (jsonDecode(getraffleSoldNums!) as List)
-          .map((data) => Raffle.fromJSON(data))
+      List<RaffleNum> list = (jsonDecode(getraffleSoldNums!) as List)
+          .map((data) => RaffleNum.fromJSON(data))
           .toList();
       setState(() {
         raffleSoldNums = list;
@@ -121,7 +128,7 @@ class RaffleController extends ControllerMVC {
   }
 
   //Function buying a raffle number
-  void buyingRaffleNum(Raffle number) {
+  void buyingRaffleNum(RaffleNum number) {
     number.buyer = buyer[Random().nextInt(buyer.length)];
     raffleBuyingNums.add(number);
     raffleNums.removeWhere((num) => num.number == number.number);
@@ -181,19 +188,11 @@ class RaffleController extends ControllerMVC {
         raffleNums.clear();
         winner.clear();
         total = 0;
-        donatorEarning = 0;
-        adminEarning = 0;
-        sponsorEarning = 0;
-        bankEarning = 0;
         selling = true;
       });
     } else {
       setState(() {
         total = 0;
-        donatorEarning = 0;
-        adminEarning = 0;
-        sponsorEarning = 0;
-        bankEarning = 0;
         selling = true;
       });
     }
@@ -216,10 +215,6 @@ class RaffleController extends ControllerMVC {
       ).then((value) {
         sort.cancel();
       });
-      donatorEarning = double.parse(donatorEarning.toStringAsFixed(2));
-      adminEarning = double.parse(adminEarning.toStringAsFixed(2));
-      sponsorEarning = double.parse(sponsorEarning.toStringAsFixed(2));
-      bankEarning = double.parse(bankEarning.toStringAsFixed(2));
       sorteado = Random().nextInt(max);
       Timer.periodic(
         raffleTime,
@@ -234,7 +229,6 @@ class RaffleController extends ControllerMVC {
                 winner = {
                   "number": num.number,
                   "buyer": num.buyer,
-                  "sponsor": num.sponsor
                 };
               });
             }
@@ -256,7 +250,6 @@ class RaffleController extends ControllerMVC {
                           "Ganhador e ${winner['buyer']}",
                         ),
                         Text("Premio: $premiumDescription"),
-                        Text("Patrocionador ${winner['sponsor']}"),
                         Text("$agora")
                       ],
                     ),
@@ -331,18 +324,10 @@ class RaffleController extends ControllerMVC {
   void getTotalEarnings() {
     raffleSoldNums.forEach((element) {
       total += quotaValue;
-      bankEarning += ((quotaValue * bankPercentage) + bankFixValue);
       setState(() {});
     });
 
-    liquidEarning = total - bankEarning;
-    donatorEarning = liquidEarning * donatorPercentage;
-    adminEarning = liquidEarning * adminPercentage;
-    sponsorEarning = liquidEarning * sponsorPercentage;
-    donatorEarning = double.parse(donatorEarning.toStringAsFixed(2));
-    adminEarning = double.parse(adminEarning.toStringAsFixed(2));
-    sponsorEarning = double.parse(sponsorEarning.toStringAsFixed(2));
-    bankEarning = double.parse(bankEarning.toStringAsFixed(2));
+    liquidEarning = total - premiumValue;
     setState(() {});
   }
 
@@ -363,11 +348,22 @@ class RaffleController extends ControllerMVC {
           content: Container(
             height: 100,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Total da rifa"),
+                    Text("Valor do premio"),
+                    Text(
+                      "R\$ $premiumValue",
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Vendido"),
                     Text(
                       "R\$ $total",
                       style: TextStyle(color: Colors.green),
@@ -378,13 +374,12 @@ class RaffleController extends ControllerMVC {
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Doador"),
+                          Text("Ganho"),
                           Text(
-                            "R\$ ${donatorEarning - premiumValue}",
+                            "R\$ $liquidEarning",
                             style: TextStyle(
-                              color: (donatorEarning - premiumValue) < 0
-                                  ? Colors.red
-                                  : Colors.green,
+                              color:
+                                  liquidEarning < 0 ? Colors.red : Colors.green,
                             ),
                           ),
                         ],
@@ -392,43 +387,15 @@ class RaffleController extends ControllerMVC {
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Doador"),
+                          Text("Ganho"),
                           Text(
-                            "R\$ $donatorEarning",
-                            style: TextStyle(color: Colors.green),
+                            "R\$ $total",
+                            style: TextStyle(
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                       ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Patrocionadores"),
-                    Text(
-                      "R\$ $sponsorEarning",
-                      style: TextStyle(color: Colors.green),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Admin"),
-                    Text(
-                      "R\$ $adminEarning",
-                      style: TextStyle(color: Colors.green),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Banco"),
-                    Text(
-                      "R\$ $bankEarning",
-                      style: TextStyle(color: Colors.green),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -451,7 +418,8 @@ class RaffleController extends ControllerMVC {
     );
   }
 
-  void showBuyingNumbers(context) {
+  //Shows an alert with all the selling numbers
+  void showSellingNumbers(context) {
     if (raffleBuyingNums.length >= 1 && total >= 0) {
       showDialog(
         context: context,

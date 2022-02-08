@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 import 'package:raffle_local/src/controllers/raffle_controller.dart';
@@ -293,7 +292,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
               ),
               FloatingActionButton(
                 onPressed: () {
-                  _raffleController.showBuyingNumbers(context);
+                  _raffleController.showSellingNumbers(context);
                 },
                 tooltip: 'Confirmar compra',
                 child: Icon(Icons.shopping_cart_outlined),

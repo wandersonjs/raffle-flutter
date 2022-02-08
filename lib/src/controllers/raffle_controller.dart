@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:raffle_local/src/models/Raffle.dart';
+import 'package:raffle_local/src/models/raffle.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
@@ -11,12 +11,14 @@ class RaffleController extends ControllerMVC {
   double premiumValue = 3500.0;
   int min = 1;
   int max = 3000;
-  double raffleValue = 15.0;
+  double quotaValue = 15.0;
 
   bool selling = true;
   bool finished = false;
   bool loadingRaffleNums = true;
-  static const timerSorteio = Duration(seconds: 10);
+
+  static const raffleTime = Duration(seconds: 10);
+
   List<Raffle> raffleNums = [];
   List<Raffle> raffleBuyingNums = [];
   List<Raffle> raffleSoldNums = [];
@@ -124,7 +126,7 @@ class RaffleController extends ControllerMVC {
     raffleBuyingNums.add(number);
     raffleNums.removeWhere((num) => num.number == number.number);
 
-    total += raffleValue;
+    total += quotaValue;
     setState(() {});
   }
 
@@ -133,7 +135,7 @@ class RaffleController extends ControllerMVC {
     raffleNums.forEach((num) {
       num.buyer = buyer[Random().nextInt(buyer.length)];
       raffleBuyingNums.add(num);
-      total += raffleValue;
+      total += quotaValue;
       setState(() {});
     });
     setState(() {
@@ -200,7 +202,7 @@ class RaffleController extends ControllerMVC {
   void raffle(context) {
     //Verifies if the sold nums size are bigger than zero, if so the raffle runs, else shows an alert saying that no numbers where sold
     if (raffleSoldNums.length > 0) {
-      Timer sort = Timer(timerSorteio, () {
+      Timer sort = Timer(raffleTime, () {
         Navigator.of(context, rootNavigator: true).pop();
       });
       showDialog(
@@ -220,7 +222,7 @@ class RaffleController extends ControllerMVC {
       bankEarning = double.parse(bankEarning.toStringAsFixed(2));
       sorteado = Random().nextInt(max);
       Timer.periodic(
-        timerSorteio,
+        raffleTime,
         (timer) {
           DateTime agora = DateTime.now();
           setState(() {
@@ -328,8 +330,8 @@ class RaffleController extends ControllerMVC {
 
   void getTotalEarnings() {
     raffleSoldNums.forEach((element) {
-      total += raffleValue;
-      bankEarning += ((raffleValue * bankPercentage) + bankFixValue);
+      total += quotaValue;
+      bankEarning += ((quotaValue * bankPercentage) + bankFixValue);
       setState(() {});
     });
 

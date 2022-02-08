@@ -23,7 +23,8 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
     super.initState();
     _raffleController.getRaffleNums().then((value) {
       if (_raffleController.raffleNums.isEmpty &&
-          (_raffleController.raffleSoldNums.length != _raffleController.max)) {
+          (_raffleController.raffleSoldNums.length !=
+              _raffleController.raffleDetails.max)) {
         _raffleController.createRaffle(context);
       }
       setState(() {
@@ -78,7 +79,8 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                               Column(
                                 children: [
                                   Text("Total cotas"),
-                                  Text(_raffleController.max.toString()),
+                                  Text(_raffleController.raffleDetails.max
+                                      .toString()),
                                 ],
                               ),
                               _raffleController.raffleSoldNums.length > 0

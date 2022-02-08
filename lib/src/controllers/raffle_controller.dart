@@ -8,13 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:mvc_pattern/mvc_pattern.dart';
 
 class RaffleController extends ControllerMVC {
-  RaffleDetails _raffleDetails = RaffleDetails();
+  RaffleDetails raffleDetails = RaffleDetails();
+  String _buyer = "";
 
-  String premiumDescription = "Biquini de crochê"; //
-  double premiumValue = 50.0;
   int min = 1;
-  int max = 50;
-  double quotaValue = 5.0;
 
   bool selling = true;
   bool finished = false;
@@ -34,45 +31,112 @@ class RaffleController extends ControllerMVC {
 
   double liquidEarning = 0.0;
 
-  List<String> buyer = [
-    'Wanderson',
-    'Julia',
-    'Tereza',
-    'Maria',
-    'Benedito',
-    'Geraldo',
-    'Antonio',
-    'Suzanny',
-    'Camila',
-    'Catarina',
-  ];
-
   //Creates the raffle
   void createRaffle(context) {
-    sellingNums = 0;
-    freeNums = 0;
-    sorteado = 0;
-    finished = false;
-    setState(() {});
-    for (var i = min; i <= max; i++) {
-      RaffleNum value = RaffleNum(
-        index: i - 1,
-        number: i,
-        buyer: "",
-      );
-      raffleNums.add(value);
-      sellingNums++;
-      setState(() {});
-    }
-    setState(() {
-      freeNums = sellingNums;
-    });
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            "Criar rifa",
+          ),
+          content: Form(
+            child: Column(
+              children: [
+                TextFormField(
+                  onChanged: (value) {
+                    setState(() {
+                      raffleDetails.premiumDescription = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Descrição do premio",
+                    hintText: "Insira aqui a descrição do premio",
+                  ),
+                ),
+                TextFormField(
+                  onChanged: (value) {
+                    setState(() {
+                      raffleDetails.premiumValue = double.parse(value);
+                    });
+                  },
+                  keyboardType: TextInputType.numberWithOptions(),
+                  decoration: InputDecoration(
+                    labelText: "Valor do premio",
+                    hintText: "Insira aqui o valor do premio",
+                  ),
+                ),
+                TextFormField(
+                  onChanged: (value) {
+                    setState(() {
+                      raffleDetails.max = int.parse(value);
+                    });
+                  },
+                  keyboardType: TextInputType.numberWithOptions(),
+                  decoration: InputDecoration(
+                    labelText: "Quantidade de cotas",
+                    hintText: "Informe o máximo de cotas da rifa",
+                  ),
+                ),
+                TextFormField(
+                  onChanged: (value) {
+                    setState(() {
+                      raffleDetails.quotaValue = double.parse(value);
+                    });
+                  },
+                  keyboardType: TextInputType.numberWithOptions(),
+                  decoration: InputDecoration(
+                    labelText: "Valor de venda cota",
+                    hintText: "Informe o valor de venda da cota",
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                saveRaffleDetails().then((value) {
+                  setState(() {
+                    sellingNums = 0;
+                    freeNums = 0;
+                    sorteado = 0;
+                    finished = false;
+                  });
+                  for (var i = min; i <= raffleDetails.max; i++) {
+                    RaffleNum value = RaffleNum(
+                      index: i - 1,
+                      number: i,
+                      buyer: "",
+                    );
+                    raffleNums.add(value);
+                    sellingNums++;
+                    setState(() {});
+                  }
+                  setState(() {
+                    freeNums = sellingNums;
+                  });
+                  Navigator.of(context).pop();
+                });
+              },
+              child: Text("Confirm"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            )
+          ],
+        );
+      },
+    );
   }
 
   //Saves the raffle details
   Future<void> saveRaffleDetails() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('raffleDetails', jsonEncode(_raffleDetails));
+    await prefs.setString('raffleDetails', jsonEncode(raffleDetails));
   }
 
   Future<void> getRaffleDetails() async {
@@ -80,7 +144,7 @@ class RaffleController extends ControllerMVC {
     var getDetails = prefs.getString('raffleDetails');
     RaffleDetails _details = jsonDecode(getDetails!);
     setState(() {
-      _raffleDetails = _details;
+      raffleDetails = _details;
     });
   }
 
@@ -129,20 +193,18 @@ class RaffleController extends ControllerMVC {
 
   //Function buying a raffle number
   void buyingRaffleNum(RaffleNum number) {
-    number.buyer = buyer[Random().nextInt(buyer.length)];
     raffleBuyingNums.add(number);
     raffleNums.removeWhere((num) => num.number == number.number);
 
-    total += quotaValue;
+    total += raffleDetails.quotaValue;
     setState(() {});
   }
 
   //Select all remaining numbers to sell
   void sellAllRaffleNumbers() {
     raffleNums.forEach((num) {
-      num.buyer = buyer[Random().nextInt(buyer.length)];
       raffleBuyingNums.add(num);
-      total += quotaValue;
+      total += raffleDetails.quotaValue;
       setState(() {});
     });
     setState(() {
@@ -153,6 +215,7 @@ class RaffleController extends ControllerMVC {
   //Confirms the selling
   void confirmSelling() {
     raffleBuyingNums.forEach((num) {
+      num.buyer = _buyer;
       raffleSoldNums.add(num);
     });
     freeNums = raffleNums.length - raffleBuyingNums.length;
@@ -215,7 +278,7 @@ class RaffleController extends ControllerMVC {
       ).then((value) {
         sort.cancel();
       });
-      sorteado = Random().nextInt(max);
+      sorteado = Random().nextInt(raffleDetails.max);
       Timer.periodic(
         raffleTime,
         (timer) {
@@ -249,7 +312,7 @@ class RaffleController extends ControllerMVC {
                         Text(
                           "Ganhador e ${winner['buyer']}",
                         ),
-                        Text("Premio: $premiumDescription"),
+                        Text("Premio: ${raffleDetails.premiumDescription}"),
                         Text("$agora")
                       ],
                     ),
@@ -323,11 +386,11 @@ class RaffleController extends ControllerMVC {
 
   void getTotalEarnings() {
     raffleSoldNums.forEach((element) {
-      total += quotaValue;
+      total += raffleDetails.quotaValue;
       setState(() {});
     });
 
-    liquidEarning = total - premiumValue;
+    liquidEarning = total - raffleDetails.premiumValue;
     setState(() {});
   }
 
@@ -355,7 +418,7 @@ class RaffleController extends ControllerMVC {
                   children: [
                     Text("Valor do premio"),
                     Text(
-                      "R\$ $premiumValue",
+                      "R\$ ${raffleDetails.premiumValue}",
                       style: TextStyle(color: Colors.green),
                     ),
                   ],
@@ -449,51 +512,72 @@ class RaffleController extends ControllerMVC {
               ],
             ),
             content: Container(
-              height: 200,
+              height: 250,
               width: 100,
-              child: GridView.builder(
-                itemCount: raffleBuyingNums.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 2.2,
-                  mainAxisSpacing: 10,
-                ),
-                itemBuilder: (BuildContext context, int index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                      color: Colors.amber,
-                    ),
-                    child: TextButton(
-                      child: Container(
-                        child: Center(
-                          child: Text(
-                            raffleBuyingNums[index].number.toString(),
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
-                          ),
+              child: Form(
+                child: Column(
+                  children: [
+                    Container(
+                      height: 148,
+                      width: 400,
+                      child: GridView.builder(
+                        itemCount: raffleBuyingNums.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 2.2,
+                          mainAxisSpacing: 10,
                         ),
+                        itemBuilder: (BuildContext context, int index) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8.0),
+                              color: Colors.amber,
+                            ),
+                            child: TextButton(
+                              child: Container(
+                                child: Center(
+                                  child: Text(
+                                    raffleBuyingNums[index].number.toString(),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ),
+                              onPressed: () {},
+                            ),
+                          );
+                        },
                       ),
-                      onPressed: () {},
                     ),
-                  );
-                },
+                    TextFormField(
+                      onChanged: (value) {
+                        setState(() {
+                          _buyer = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return "Por favor informe o comprador";
+                        }
+                        return null;
+                      },
+                    )
+                  ],
+                ),
               ),
             ),
             actions: [
-              Container(
-                child: TextButton(
-                  onPressed: () {
-                    confirmSelling();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    "Confirmar venda",
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
+              TextButton(
+                onPressed: () {
+                  confirmSelling();
+                  Navigator.of(context).pop();
+                },
+                child: Text(
+                  "Confirmar",
+                  style: TextStyle(
+                    color: Colors.green,
                   ),
                 ),
               ),
@@ -510,7 +594,7 @@ class RaffleController extends ControllerMVC {
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                  "Cancelar venda",
+                  "Cancelar",
                   style: TextStyle(
                     color: Colors.red,
                   ),

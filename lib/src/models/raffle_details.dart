@@ -1,8 +1,8 @@
 class RaffleDetails {
-  late String premiumDescription;
-  late double premiumValue;
-  late double quotaValue;
-  late int max;
+  late String premiumDescription = "";
+  late double premiumValue = 0.0;
+  late double quotaValue = 0.0;
+  late int max = 50;
 
   RaffleDetails();
 

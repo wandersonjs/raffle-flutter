@@ -55,7 +55,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Carregando!"),
+                  Text("Loading!"),
                   SizedBox(
                     height: 20,
                   ),
@@ -77,7 +77,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                             children: [
                               Column(
                                 children: [
-                                  Text("Total cotas"),
+                                  Text("Total quotas"),
                                   Text(_raffleController.raffleDetails.max
                                       .toString()),
                                 ],
@@ -87,7 +87,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            'Livres',
+                                            'Free',
                                             style: TextStyle(
                                                 color: _raffleController.selling
                                                     ? Colors.blue
@@ -111,7 +111,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                     )
                                   : Column(
                                       children: [
-                                        Text('Livres'),
+                                        Text('Free'),
                                         Text(
                                           _raffleController.raffleNums.length
                                               .toString(),
@@ -123,7 +123,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                       child: Column(
                                         children: [
                                           Text(
-                                            'Vendidos',
+                                            'Sold',
                                             style: TextStyle(
                                                 color: _raffleController.selling
                                                     ? Colors.black
@@ -148,7 +148,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                     )
                                   : Column(
                                       children: [
-                                        Text('Vendidos'),
+                                        Text('Sold'),
                                         Text(
                                           _raffleController
                                               .raffleSoldNums.length
@@ -167,13 +167,15 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                             margin: EdgeInsets.only(top: 10),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [Text("Selecione os números abaixo")],
+                              children: [
+                                Text("Select one of the numbers below"),
+                              ],
                             ),
                           )
                         : Container(),
                     _raffleController.raffleNums.isEmpty &&
-                            _raffleController.raffleSoldNums.isNotEmpty &&
-                            _raffleController.selling
+                            (_raffleController.raffleSoldNums.isNotEmpty ||
+                                _raffleController.raffleSellingNums.isNotEmpty)
                         ? Container(
                             height: height,
                             alignment: Alignment.center,
@@ -181,7 +183,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  "Todos os números foram vendidos!",
+                                  "All the numbers where sold!",
                                 ),
                                 SizedBox(
                                   height: 20,
@@ -194,11 +196,12 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                 SizedBox(
                                   height: 20,
                                 ),
-                                Text("Sorteio não realizado!")
+                                Text("Awaiting raffling!")
                               ],
                             ),
                           )
-                        : _raffleController.raffleNums.isEmpty
+                        : _raffleController.raffleNums.isEmpty &&
+                                _raffleController.raffleSoldNums.isNotEmpty
                             ? Container(
                                 height: height,
                                 alignment: Alignment.center,
@@ -206,16 +209,20 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      "Por favor crie uma nova rifa!",
+                                      "Please crete a new raffle!",
                                     ),
                                     SizedBox(
                                       height: 20,
                                     ),
-                                    Icon(
-                                      Icons.fiber_new,
-                                      size: 50,
-                                      color: Colors.green,
-                                    ),
+                                    IconButton(
+                                      onPressed: () => _raffleController
+                                          .createRaffle(context),
+                                      icon: Icon(
+                                        Icons.fiber_new,
+                                        size: 50,
+                                        color: Colors.green,
+                                      ),
+                                    )
                                   ],
                                 ),
                               )
@@ -294,28 +301,12 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _raffleController.selling
-                  ? Container()
-                  : FloatingActionButton(
-                      backgroundColor: Colors.green,
-                      onPressed: () {
-                        _raffleController.createRaffle(context);
-                      },
-                      tooltip: 'Efetuar sorteio',
-                      child: Icon(
-                        Icons.fiber_new_outlined,
-                        size: 50,
-                      ),
-                    ),
-              SizedBox(
-                width: 11,
-              ),
               FloatingActionButton(
                 backgroundColor: Colors.amber,
                 onPressed: () {
                   _raffleController.raffle(context);
                 },
-                tooltip: 'Efetuar sorteio',
+                tooltip: 'Sort',
                 child: Icon(
                   Icons.sort,
                 ),
@@ -328,7 +319,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                 onPressed: () {
                   _raffleController.sellAllRaffleNumbers();
                 },
-                tooltip: 'Seleciona todos os números',
+                tooltip: 'Sell all numbers',
                 child: Icon(Icons.select_all),
               ),
               SizedBox(
@@ -338,8 +329,33 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                 onPressed: () {
                   _raffleController.showSellingNumbers(context);
                 },
-                tooltip: 'Confirmar compra',
-                child: Icon(Icons.shopping_cart_outlined),
+                tooltip: 'Confirm selling',
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: 20,
+                      left: 10,
+                      child: Icon(
+                        Icons.shopping_cart_outlined,
+                      ),
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 5,
+                      child: Container(
+                        padding: EdgeInsets.all(1),
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "${_raffleController.raffleSellingNums.length}",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
             ],
           ),

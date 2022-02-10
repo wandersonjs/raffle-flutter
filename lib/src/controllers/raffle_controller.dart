@@ -20,7 +20,7 @@ class RaffleController extends ControllerMVC {
   static const raffleTime = Duration(seconds: 10);
 
   List<RaffleNum> raffleNums = [];
-  List<RaffleNum> raffleBuyingNums = [];
+  List<RaffleNum> raffleSellingNums = [];
   List<RaffleNum> raffleSoldNums = [];
   Map<String, dynamic> winner = {};
 
@@ -38,7 +38,7 @@ class RaffleController extends ControllerMVC {
       builder: (context) {
         return AlertDialog(
           title: Text(
-            "Criar rifa",
+            "Create new Raffle",
           ),
           content: Form(
             child: Column(
@@ -50,8 +50,8 @@ class RaffleController extends ControllerMVC {
                     });
                   },
                   decoration: InputDecoration(
-                    labelText: "Descrição do premio",
-                    hintText: "Insira aqui a descrição do premio",
+                    labelText: "Premium description",
+                    hintText: "Insert here the permium description",
                   ),
                 ),
                 TextFormField(
@@ -62,8 +62,8 @@ class RaffleController extends ControllerMVC {
                   },
                   keyboardType: TextInputType.numberWithOptions(),
                   decoration: InputDecoration(
-                    labelText: "Valor do premio",
-                    hintText: "Insira aqui o valor do premio",
+                    labelText: "Premium value",
+                    hintText: "Insert here the premium value",
                   ),
                 ),
                 TextFormField(
@@ -74,8 +74,8 @@ class RaffleController extends ControllerMVC {
                   },
                   keyboardType: TextInputType.numberWithOptions(),
                   decoration: InputDecoration(
-                    labelText: "Quantidade de cotas",
-                    hintText: "Informe o máximo de cotas da rifa",
+                    labelText: "Max quotas",
+                    hintText: "Inform here the raffle max quotas",
                   ),
                 ),
                 TextFormField(
@@ -86,8 +86,8 @@ class RaffleController extends ControllerMVC {
                   },
                   keyboardType: TextInputType.numberWithOptions(),
                   decoration: InputDecoration(
-                    labelText: "Valor de venda cota",
-                    hintText: "Informe o valor de venda da cota",
+                    labelText: "Quota price",
+                    hintText: "Inform here the quota price",
                   ),
                 ),
               ],
@@ -193,7 +193,7 @@ class RaffleController extends ControllerMVC {
 
   //Function buying a raffle number
   void buyingRaffleNum(RaffleNum number) {
-    raffleBuyingNums.add(number);
+    raffleSellingNums.add(number);
     raffleNums.removeWhere((num) => num.number == number.number);
 
     total += raffleDetails.quotaValue;
@@ -203,7 +203,7 @@ class RaffleController extends ControllerMVC {
   //Select all remaining numbers to sell
   void sellAllRaffleNumbers() {
     raffleNums.forEach((num) {
-      raffleBuyingNums.add(num);
+      raffleSellingNums.add(num);
       total += raffleDetails.quotaValue;
       setState(() {});
     });
@@ -214,33 +214,33 @@ class RaffleController extends ControllerMVC {
 
   //Confirms the selling
   void confirmSelling() {
-    raffleBuyingNums.forEach((num) {
+    raffleSellingNums.forEach((num) {
       num.buyer = _buyer;
       raffleSoldNums.add(num);
     });
-    freeNums = raffleNums.length - raffleBuyingNums.length;
+    freeNums = raffleNums.length - raffleSellingNums.length;
     setState(() {});
     clearValues();
     print(raffleSoldNums.length);
     saveRaffleNums().then((value) {
-      print("Números de rifa salvos com sucesso!");
+      print("Raffle nums saved successfuly!");
     });
     saveraffleSoldNums().then((value) {
-      print("Numeros comprados de rifa salvos com sucesso!");
+      print("Raffle sold nums saved sucessfuly!");
     });
-    raffleBuyingNums.clear();
+    raffleSellingNums.clear();
   }
 
   //cancell the selling number runing every one and reinserting on raffleNums
   void cancelSelling() {
-    for (var i = 0; i < raffleBuyingNums.length; i++) {
-      raffleNums.insert(i, raffleBuyingNums[i]);
+    for (var i = 0; i < raffleSellingNums.length; i++) {
+      raffleNums.insert(i, raffleSellingNums[i]);
     }
 
     setState(() {});
     clearValues();
-    print(raffleBuyingNums.length);
-    raffleBuyingNums.clear();
+    print(raffleSellingNums.length);
+    raffleSellingNums.clear();
   }
 
   //Clears all the values after the raffle
@@ -271,7 +271,7 @@ class RaffleController extends ControllerMVC {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text("Sorteando"),
+            title: Text("Raffling"),
             content: CircularProgressIndicator(),
           );
         },
@@ -282,7 +282,7 @@ class RaffleController extends ControllerMVC {
       Timer.periodic(
         raffleTime,
         (timer) {
-          DateTime agora = DateTime.now();
+          DateTime now = DateTime.now();
           setState(() {
             finished = true;
           });
@@ -302,7 +302,7 @@ class RaffleController extends ControllerMVC {
               builder: (context) {
                 return AlertDialog(
                   title: Text(
-                    "Nº sorteado: ${winner['number']}",
+                    "Drawn number: ${winner['number']}",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   content: Container(
@@ -310,10 +310,10 @@ class RaffleController extends ControllerMVC {
                     child: Column(
                       children: [
                         Text(
-                          "Ganhador e ${winner['buyer']}",
+                          "The winner is ${winner['buyer']}",
                         ),
-                        Text("Premio: ${raffleDetails.premiumDescription}"),
-                        Text("$agora")
+                        Text("Premium: ${raffleDetails.premiumDescription}"),
+                        Text("$now")
                       ],
                     ),
                   ),
@@ -337,10 +337,10 @@ class RaffleController extends ControllerMVC {
               builder: (context) {
                 return AlertDialog(
                   title: Text(
-                    "Nº sorteado: $sorteado",
+                    "Drawn number: $sorteado",
                   ),
                   content: Text(
-                    "Infelizmente não tivemos nenhuma ganhador desta vez",
+                    "Unfortunately we didn't have any winners this time.",
                   ),
                   actions: [
                     TextButton(
@@ -365,10 +365,10 @@ class RaffleController extends ControllerMVC {
         builder: (context) {
           return AlertDialog(
             title: Text(
-              "Não houve vendas",
+              "You haven't sold any number",
             ),
             content: Text(
-              "Ainda não foram vendidos números para esta rifa",
+              "You need to sell at least one number to sell the draw",
             ),
             actions: [
               TextButton(
@@ -404,7 +404,7 @@ class RaffleController extends ControllerMVC {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                "Ganhos",
+                "Earnings",
               ),
             ],
           ),
@@ -416,9 +416,9 @@ class RaffleController extends ControllerMVC {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Valor do premio"),
+                    Text("Premium value"),
                     Text(
-                      "R\$ ${raffleDetails.premiumValue}",
+                      "\$ ${raffleDetails.premiumValue}",
                       style: TextStyle(color: Colors.green),
                     ),
                   ],
@@ -426,9 +426,9 @@ class RaffleController extends ControllerMVC {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Vendido"),
+                    Text("Sold"),
                     Text(
-                      "R\$ $total",
+                      "\$ $total",
                       style: TextStyle(color: Colors.green),
                     ),
                   ],
@@ -437,9 +437,9 @@ class RaffleController extends ControllerMVC {
                     ? Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Ganho"),
+                          Text("Earning"),
                           Text(
-                            "R\$ $liquidEarning",
+                            "\$ $liquidEarning",
                             style: TextStyle(
                               color:
                                   liquidEarning < 0 ? Colors.red : Colors.green,
@@ -450,7 +450,7 @@ class RaffleController extends ControllerMVC {
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Ganho"),
+                          Text("Earning"),
                           Text(
                             "R\$ $total",
                             style: TextStyle(
@@ -473,7 +473,7 @@ class RaffleController extends ControllerMVC {
                   });
                 }
               },
-              child: Text("Fechar"),
+              child: Text("Close"),
             )
           ],
         );
@@ -483,7 +483,7 @@ class RaffleController extends ControllerMVC {
 
   //Shows an alert with all the selling numbers
   void showSellingNumbers(context) {
-    if (raffleBuyingNums.length >= 1 && total >= 0) {
+    if (raffleSellingNums.length >= 1 && total >= 0) {
       showDialog(
         context: context,
         builder: (context) {
@@ -501,7 +501,7 @@ class RaffleController extends ControllerMVC {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Cotas: ${raffleBuyingNums.length}"),
+                      Text("Quotas: ${raffleSellingNums.length}"),
                     ],
                   ),
                 ),
@@ -521,7 +521,7 @@ class RaffleController extends ControllerMVC {
                       height: 148,
                       width: 400,
                       child: GridView.builder(
-                        itemCount: raffleBuyingNums.length,
+                        itemCount: raffleSellingNums.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           crossAxisSpacing: 10,
@@ -538,7 +538,7 @@ class RaffleController extends ControllerMVC {
                               child: Container(
                                 child: Center(
                                   child: Text(
-                                    raffleBuyingNums[index].number.toString(),
+                                    raffleSellingNums[index].number.toString(),
                                     style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w600),
@@ -557,9 +557,10 @@ class RaffleController extends ControllerMVC {
                           _buyer = value;
                         });
                       },
+                      decoration: InputDecoration(),
                       validator: (value) {
                         if (value!.isEmpty) {
-                          return "Por favor informe o comprador";
+                          return "Please inform the buyer";
                         }
                         return null;
                       },
@@ -575,7 +576,7 @@ class RaffleController extends ControllerMVC {
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                  "Confirmar",
+                  "Confirm",
                   style: TextStyle(
                     color: Colors.green,
                   ),
@@ -594,7 +595,7 @@ class RaffleController extends ControllerMVC {
                   Navigator.of(context).pop();
                 },
                 child: Text(
-                  "Cancelar",
+                  "Cancel",
                   style: TextStyle(
                     color: Colors.red,
                   ),
@@ -610,7 +611,7 @@ class RaffleController extends ControllerMVC {
         builder: (context) {
           return AlertDialog(
             title: Text("Whoops"),
-            content: Text("Você ainda não selecionou nenhum número"),
+            content: Text("The cart is empty"),
             actions: [
               TextButton(
                 onPressed: () {

@@ -23,8 +23,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
     super.initState();
     _raffleController.getRaffleNums().then((value) {
       if (_raffleController.raffleNums.isEmpty &&
-          (_raffleController.raffleSoldNums.length !=
-              _raffleController.raffleDetails.max)) {
+          _raffleController.raffleSoldNums.isEmpty) {
         _raffleController.createRaffle(context);
       }
       setState(() {
@@ -173,6 +172,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                           )
                         : Container(),
                     _raffleController.raffleNums.isEmpty &&
+                            _raffleController.raffleSoldNums.isNotEmpty &&
                             _raffleController.selling
                         ? Container(
                             height: height,
@@ -198,34 +198,57 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                               ],
                             ),
                           )
-                        : Container(
-                            margin: EdgeInsets.only(top: 20),
-                            height: height,
-                            width: width,
-                            child: GridView.builder(
-                              itemCount: _raffleController.selling == false
-                                  ? _raffleController.raffleSoldNums.length
-                                  : _raffleController.raffleNums.length,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: width >= 800 ? 20 : 4,
-                                crossAxisSpacing: 10,
-                                childAspectRatio: 2.2,
-                                mainAxisSpacing: 10,
-                              ),
-                              itemBuilder: (BuildContext context, int index) {
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    color: _raffleController.selling
-                                        ? Colors.green
-                                        : Colors.red,
+                        : _raffleController.raffleNums.isEmpty
+                            ? Container(
+                                height: height,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Por favor crie uma nova rifa!",
+                                    ),
+                                    SizedBox(
+                                      height: 20,
+                                    ),
+                                    Icon(
+                                      Icons.fiber_new,
+                                      size: 50,
+                                      color: Colors.green,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(
+                                margin: EdgeInsets.only(top: 20),
+                                height: height,
+                                width: width,
+                                child: GridView.builder(
+                                  itemCount: _raffleController.selling == false
+                                      ? _raffleController.raffleSoldNums.length
+                                      : _raffleController.raffleNums.length,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: width >= 800 ? 20 : 4,
+                                    crossAxisSpacing: 10,
+                                    childAspectRatio: 2.2,
+                                    mainAxisSpacing: 10,
                                   ),
-                                  child: TextButton(
-                                    child: Container(
-                                      child: Center(
-                                        child:
-                                            _raffleController.selling == false
+                                  itemBuilder:
+                                      (BuildContext context, int index) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                        color: _raffleController.selling
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                      child: TextButton(
+                                        child: Container(
+                                          child: Center(
+                                            child: _raffleController.selling ==
+                                                    false
                                                 ? Text(
                                                     _raffleController
                                                         .raffleSoldNums[index]
@@ -246,20 +269,21 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                                                         fontWeight:
                                                             FontWeight.w600),
                                                   ),
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          if (_raffleController.selling) {
+                                            _raffleController.buyingRaffleNum(
+                                              _raffleController
+                                                  .raffleNums[index],
+                                            );
+                                          }
+                                        },
                                       ),
-                                    ),
-                                    onPressed: () {
-                                      if (_raffleController.selling) {
-                                        _raffleController.buyingRaffleNum(
-                                          _raffleController.raffleNums[index],
-                                        );
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          )
+                                    );
+                                  },
+                                ),
+                              )
                   ],
                 )
               ],
@@ -270,13 +294,31 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              _raffleController.selling
+                  ? Container()
+                  : FloatingActionButton(
+                      backgroundColor: Colors.green,
+                      onPressed: () {
+                        _raffleController.createRaffle(context);
+                      },
+                      tooltip: 'Efetuar sorteio',
+                      child: Icon(
+                        Icons.fiber_new_outlined,
+                        size: 50,
+                      ),
+                    ),
+              SizedBox(
+                width: 11,
+              ),
               FloatingActionButton(
                 backgroundColor: Colors.amber,
                 onPressed: () {
                   _raffleController.raffle(context);
                 },
                 tooltip: 'Efetuar sorteio',
-                child: Icon(Icons.sort),
+                child: Icon(
+                  Icons.sort,
+                ),
               ),
               SizedBox(
                 width: 11,

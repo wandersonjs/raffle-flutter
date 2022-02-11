@@ -139,15 +139,6 @@ class RaffleController extends ControllerMVC {
     await prefs.setString('raffleDetails', jsonEncode(raffleDetails));
   }
 
-  Future<void> getRaffleDetails() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var getDetails = prefs.getString('raffleDetails');
-    RaffleDetails _details = jsonDecode(getDetails!);
-    setState(() {
-      raffleDetails = _details;
-    });
-  }
-
   //Saves all the raffle numbers into the shared preferences
   Future<void> saveRaffleNums() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -170,6 +161,15 @@ class RaffleController extends ControllerMVC {
   //Get the saved numbers from sharedpreferences
   Future<void> getRaffleNums() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (prefs.containsKey('raffleDetails')) {
+      var getDetails = prefs.getString('raffleDetails');
+      RaffleDetails _details = RaffleDetails.fromJson(jsonDecode(getDetails!));
+      setState(() {
+        raffleDetails = _details;
+      });
+    }
+
     if (prefs.containsKey('raffleNums')) {
       var getRaffleNums = prefs.getString('raffleNums');
       List<RaffleNum> list = (jsonDecode(getRaffleNums!) as List)
@@ -244,8 +244,10 @@ class RaffleController extends ControllerMVC {
   }
 
   //Clears all the values after the raffle
-  void clearValues() {
+  void clearValues() async {
     if (finished) {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.remove('raffleDetails');
       setState(() {
         raffleSoldNums.clear();
         raffleNums.clear();
@@ -331,6 +333,9 @@ class RaffleController extends ControllerMVC {
               },
             );
             timer.cancel();
+            setState(() {
+              selling = false;
+            });
           } else {
             showDialog(
               context: context,
@@ -356,6 +361,9 @@ class RaffleController extends ControllerMVC {
               },
             );
             timer.cancel();
+            setState(() {
+              selling = false;
+            });
           }
         },
       );
@@ -392,6 +400,52 @@ class RaffleController extends ControllerMVC {
 
     liquidEarning = total - raffleDetails.premiumValue;
     setState(() {});
+  }
+
+  void showRaffleDetails(context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Raffle details"),
+          content: SizedBox(
+            height: 100,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Premium"),
+                    Text(raffleDetails.premiumDescription)
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Premium value"),
+                    Text("\$ ${raffleDetails.premiumValue}")
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Quota price"),
+                    Text("\$ ${raffleDetails.quotaValue}")
+                  ],
+                )
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("Ok"),
+            )
+          ],
+        );
+      },
+    );
   }
 
   void getEarnigs(context) {

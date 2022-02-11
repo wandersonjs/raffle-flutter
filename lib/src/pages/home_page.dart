@@ -40,11 +40,19 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
+          _raffleController.raffleDetails.premiumDescription.isNotEmpty
+              ? IconButton(
+                  onPressed: () => _raffleController.showRaffleDetails(context),
+                  icon: Icon(
+                    Icons.info_outline,
+                  ),
+                )
+              : Container(),
           _raffleController.raffleSoldNums.isNotEmpty
               ? IconButton(
                   onPressed: () => _raffleController.getEarnigs(context),
                   icon: Icon(
-                    Icons.remove_red_eye_outlined,
+                    Icons.monetization_on_outlined,
                   ),
                 )
               : Container(),
@@ -201,7 +209,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                             ),
                           )
                         : _raffleController.raffleNums.isEmpty &&
-                                _raffleController.raffleSoldNums.isNotEmpty
+                                _raffleController.selling
                             ? Container(
                                 height: height,
                                 alignment: Alignment.center,
@@ -341,7 +349,7 @@ class _MyHomePageState extends StateMVC<MyHomePage> {
                     ),
                     Positioned(
                       top: 10,
-                      right: 5,
+                      right: 10,
                       child: Container(
                         padding: EdgeInsets.all(1),
                         decoration: BoxDecoration(

@@ -41,56 +41,59 @@ class RaffleController extends ControllerMVC {
             "Create new Raffle",
           ),
           content: Form(
-            child: Column(
-              children: [
-                TextFormField(
-                  onChanged: (value) {
-                    setState(() {
-                      raffleDetails.premiumDescription = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: "Premium description",
-                    hintText: "Insert here the permium description",
+            child: SizedBox(
+              height: 300,
+              child: Column(
+                children: [
+                  TextFormField(
+                    onChanged: (value) {
+                      setState(() {
+                        raffleDetails.premiumDescription = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Premium description",
+                      hintText: "Insert here the permium description",
+                    ),
                   ),
-                ),
-                TextFormField(
-                  onChanged: (value) {
-                    setState(() {
-                      raffleDetails.premiumValue = double.parse(value);
-                    });
-                  },
-                  keyboardType: TextInputType.numberWithOptions(),
-                  decoration: InputDecoration(
-                    labelText: "Premium value",
-                    hintText: "Insert here the premium value",
+                  TextFormField(
+                    onChanged: (value) {
+                      setState(() {
+                        raffleDetails.premiumValue = double.parse(value);
+                      });
+                    },
+                    keyboardType: TextInputType.numberWithOptions(),
+                    decoration: InputDecoration(
+                      labelText: "Premium value",
+                      hintText: "Insert here the premium value",
+                    ),
                   ),
-                ),
-                TextFormField(
-                  onChanged: (value) {
-                    setState(() {
-                      raffleDetails.max = int.parse(value);
-                    });
-                  },
-                  keyboardType: TextInputType.numberWithOptions(),
-                  decoration: InputDecoration(
-                    labelText: "Max quotas",
-                    hintText: "Inform here the raffle max quotas",
+                  TextFormField(
+                    onChanged: (value) {
+                      setState(() {
+                        raffleDetails.max = int.parse(value);
+                      });
+                    },
+                    keyboardType: TextInputType.numberWithOptions(),
+                    decoration: InputDecoration(
+                      labelText: "Max quotas",
+                      hintText: "Inform here the raffle max quotas",
+                    ),
                   ),
-                ),
-                TextFormField(
-                  onChanged: (value) {
-                    setState(() {
-                      raffleDetails.quotaValue = double.parse(value);
-                    });
-                  },
-                  keyboardType: TextInputType.numberWithOptions(),
-                  decoration: InputDecoration(
-                    labelText: "Quota price",
-                    hintText: "Inform here the quota price",
+                  TextFormField(
+                    onChanged: (value) {
+                      setState(() {
+                        raffleDetails.quotaValue = double.parse(value);
+                      });
+                    },
+                    keyboardType: TextInputType.numberWithOptions(),
+                    decoration: InputDecoration(
+                      labelText: "Quota price",
+                      hintText: "Inform here the quota price",
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           actions: [

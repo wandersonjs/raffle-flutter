@@ -31,7 +31,7 @@ class RaffleController extends ControllerMVC {
 
   double liquidEarning = 0.0;
 
-  //Creates the raffle
+  //Shows an dialog to insert the raffle details
   void createRaffle(context) {
     showDialog(
       context: context,
@@ -161,10 +161,11 @@ class RaffleController extends ControllerMVC {
     await prefs.remove('raffleSoldNums');
   }
 
-  //Get the saved numbers from sharedpreferences
+  //Get the saved numbers and raffle details from sharedpreferences
   Future<void> getRaffleNums() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    //Verifies if the shared preferences contains de the key raffleDetails, if so, retrieve it and pass back to the system.
     if (prefs.containsKey('raffleDetails')) {
       var getDetails = prefs.getString('raffleDetails');
       RaffleDetails _details = RaffleDetails.fromJson(jsonDecode(getDetails!));
@@ -173,6 +174,7 @@ class RaffleController extends ControllerMVC {
       });
     }
 
+    //Verifies if the shared preferences contains de the key raffleNums if so, retrieve it and pass back to the system.
     if (prefs.containsKey('raffleNums')) {
       var getRaffleNums = prefs.getString('raffleNums');
       List<RaffleNum> list = (jsonDecode(getRaffleNums!) as List)
@@ -182,6 +184,8 @@ class RaffleController extends ControllerMVC {
         raffleNums = list;
       });
     }
+
+    //Verifies if the shared preferences contains de the key raffleSoldNums, if so, retrieve it and pass back to the system.
     if (prefs.containsKey('raffleSoldNums')) {
       var getraffleSoldNums = prefs.getString('raffleSoldNums');
       List<RaffleNum> list = (jsonDecode(getraffleSoldNums!) as List)
@@ -395,6 +399,7 @@ class RaffleController extends ControllerMVC {
     }
   }
 
+  //Gets the total earnings
   void getTotalEarnings() {
     raffleSoldNums.forEach((element) {
       total += raffleDetails.quotaValue;
@@ -405,6 +410,7 @@ class RaffleController extends ControllerMVC {
     setState(() {});
   }
 
+  //Shows an alert dialog with the raffle details
   void showRaffleDetails(context) {
     showDialog(
       context: context,
@@ -451,6 +457,7 @@ class RaffleController extends ControllerMVC {
     );
   }
 
+//shows an alert dialog with the earnings
   void getEarnigs(context) {
     getTotalEarnings();
     showDialog(
